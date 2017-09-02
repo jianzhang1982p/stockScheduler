@@ -1,12 +1,13 @@
 from apscheduler.schedulers.blocking import BlockingScheduler as Scheduler
 from datetime import datetime
 import contextlib,pymysql
-import shipane_sdk
+import shipane_sdk,os
 schedudler = Scheduler()
  
 class stockScheduler():
     def __init__(self,client):
-        f=open("/root/.db_config","r")
+        path=os.path.expanduser('~')
+        f=open(path+"/.db_config","r")
         config = f.read()
         f.close()
         config=eval(config)
