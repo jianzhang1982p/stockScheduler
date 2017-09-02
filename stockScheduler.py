@@ -6,16 +6,20 @@ schedudler = Scheduler()
  
 class stockScheduler():
     def __init__(self,client):
+        f=open("/root/.db_config","r")
+        config = f.read()
+        f.close()
+        config=eval(config)
         self.db_config={
-             'host':'wnqyf.com',
-             'port':3306,
-             'user':'wnq',
-             'password':'wnq6',
-             'db':'wnqyf',
+             'host':config['db_host'],
+             'port':config['db_port'],
+             'user':config['db_user'],
+             'password':config['db_password'],
+             'db':config['db_name'],
              'charset':'utf8',
              'cursorclass':pymysql.cursors.DictCursor,
              }
-        self.shipane=shipane_sdk.Client(host='106.14.216.218', port=8888, key='18106721982')
+        self.shipane=shipane_sdk.Client(host=config['shipane_host'], port=config['shipane_port'], key=config['shipane_key'])
         self.client=client
         self.zxzq='account:3782'
         self.cfzq='account:2033'
@@ -107,4 +111,4 @@ if __name__=="__main__":
 
     stockSched=stockScheduler(zxzq)
     r=stockSched.get_scheduler()
-
+    print(r)
