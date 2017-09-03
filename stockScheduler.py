@@ -2,8 +2,6 @@ from apscheduler.schedulers.blocking import BlockingScheduler as Scheduler
 from datetime import datetime
 import contextlib,pymysql
 import shipane_sdk,os
-schedudler = Scheduler()
- 
 class stockScheduler():
     def __init__(self,client):
         path=os.path.expanduser('~')
@@ -59,12 +57,12 @@ class stockScheduler():
         return_dic['buy1_volume'] = float(stock_info[10])
         return return_dic
     def get_could_buy(self):
-        positions = self.connection.get_positions(self.client)
+        positions = self.shipane.get_positions(self.client)
         sub_account = positions['sub_accounts']
         could_buy_money = float(sub_account.iat[0, self.type])
         return could_buy_money
     def get_could_sell(self,code):
-        positions = self.connection.get_positions(client=self.client)
+        positions = self.shipane.get_positions(client=self.client)
         holders = positions['positions']
         for index,row in holders.iterrows():
             if self.client==self.zxzq:
@@ -83,6 +81,7 @@ class stockScheduler():
             result=cursor.fetchall()
         return result
     def action(self,stock):
+        print(stock)
         if not stock or not stock.get('code'):return
         code=stock.get('code')
         name=stock.get('name')
@@ -106,10 +105,22 @@ class stockScheduler():
 if __name__=="__main__":
     zxzq='account:3782'
     cfzq='account:2033'
-#    schedudler.add_job(job1,'date',run_date=datetime(2017,9,2,14,47,0))
-#    schedudler.add_job(job2,'cron',second="*/2")
-#    schedudler.start()
-
+    #schedudler.add_job(job1,'cron',second="*/2",kwargs={'p':'ok'})
+    #scheduler.add_job(tick, 'date', run_date='2016-02-14 15:01:05',args=['ok'])
+    schedudler = Scheduler()
     stockSched=stockScheduler(zxzq)
-    r=stockSched.get_scheduler()
-    print(r)
+    scheds=stockSched.get_scheduler()
+    for sched in scheds:
+        code=sched['code']
+        rundate=sched['date']+' '+sched['time']
+        #rundate='2017-09-03 23:23:00'
+        schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
+    schedudler.start()
+
+
+
+
+
+
+
+
