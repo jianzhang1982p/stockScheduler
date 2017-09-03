@@ -100,8 +100,9 @@ class stockScheduler():
             if not price:price= self.get_stock_price(code)['buy1_price']
             if not amount:amount=self.get_could_sell(code)
             self.shipane.buy(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
-
-
+def exitsched():
+    schedudler.shutdown()
+    exit()
 if __name__=="__main__":
     zxzq='account:3782'
     cfzq='account:2033'
@@ -110,8 +111,10 @@ if __name__=="__main__":
     schedudler = Scheduler()
     stockSched=stockScheduler(zxzq)
     scheds=stockSched.get_scheduler()
+    schedudler.add_job(exitsched,'cron',hour='15',minute='02')
     for sched in scheds:
         code=sched['code']
+        print(code)
         rundate=sched['date']+' '+sched['time']
         #rundate='2017-09-03 23:23:00'
         schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
