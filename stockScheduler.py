@@ -111,14 +111,15 @@ if __name__=="__main__":
     schedudler = Scheduler()
     stockSched=stockScheduler(zxzq)
     scheds=stockSched.get_scheduler()
-    schedudler.add_job(exitsched,'cron',hour='15',minute='02')
-    for sched in scheds:
-        code=sched['code']
-        print(code)
-        rundate=sched['date']+' '+sched['time']
-        #rundate='2017-09-03 23:23:00'
-        schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
-    schedudler.start()
+    if scheds:
+        schedudler.add_job(exitsched,'cron',hour='15',minute='02')
+        for sched in scheds:
+            code=sched['code']
+            print(code)
+            rundate=sched['date']+' '+sched['time']
+            #rundate='2017-09-03 23:23:00'
+            schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
+        schedudler.start()
 
 
 
