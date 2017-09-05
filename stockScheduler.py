@@ -99,7 +99,7 @@ class stockScheduler():
         if action=='sell':
             if not price:price= self.get_stock_price(code)['buy1_price']
             if not amount:amount=self.get_could_sell(code)
-            self.shipane.buy(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
+            self.shipane.sell(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
 def exitsched():
     schedudler.shutdown()
     exit()
