@@ -18,6 +18,11 @@ class stockScheduler():
              'charset':'utf8',
              'cursorclass':pymysql.cursors.DictCursor,
              }
+        self.mail_config={
+            'host':config['mail_host'],
+            'user':config['mail_user'],
+            'password':config['mail_password'],
+        }
         self.shipane=shipane_sdk.Client(host=config['shipane_host'], port=config['shipane_port'], key=config['shipane_key'])
         self.client=client
         self.zxzq='account:3782'
@@ -91,15 +96,34 @@ class stockScheduler():
         amount=stock.get('amount')
         money=stock.get('money')
         price=stock.get('price')
-        if action=='buy':
-            if not amount and not money:money=self.get_could_buy()
-            if not price:price= self.get_stock_price(code)['sell1_price']
-            if not amount:amount=int(money/price/100)*100
-            self.shipane.buy(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
-        if action=='sell':
-            if not price:price= self.get_stock_price(code)['buy1_price']
-            if not amount:amount=self.get_could_sell(code)
-            self.shipane.sell(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
+#        order = {
+#            'action': 'BUY' if action == 'buy' else 'SELL',
+#            'symbol': code,
+#            'type': 'LIMIT',
+#            'price': price,
+#            'amount': amount
+#        }
+#        try:
+#            self.shipane.execute(self.client, **order)
+#        except Exception as e:
+#            self._logger.exception("下单异常")
+        try:
+            if action=='buy':
+                if not amount and not money:money=self.get_could_buy()
+                if not price:price= self.get_stock_price(code)['sell1_price']
+                if not amount:amount=int(money/price/100)*100
+                self.shipane.buy(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
+            if action=='sell':
+                if not price:price= self.get_stock_price(code)['buy1_price']
+                if not amount:amount=self.get_could_sell(code)
+                self.shipane.sell(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
+        except Exception as e:
+            self.sendmail("操作流买卖错误！","操作流买卖错误请注意查看".str(e))
+    def sendmail(self,title,body):
+        yag = yagmail.SMTP(user=self.mail_config['user'],
+            password=self.mail_config['password'], host=self.mail_config['host'], port='25')
+        yag.send(to='20728850@qq.com', subject=title, contents=[body])
+        print("邮件已发送成功！"+title+body)
 def exitsched():
     schedudler.shutdown()
     exit()
