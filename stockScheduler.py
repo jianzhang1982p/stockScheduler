@@ -1,8 +1,9 @@
 from apscheduler.schedulers.blocking import BlockingScheduler as Scheduler
 from datetime import datetime
 import contextlib,pymysql
-import shipane_sdk,os
-class stockScheduler():
+import shipane_sdk,os,yagmail
+import requests
+class stockScheduler(object):
     def __init__(self,client):
         path=os.path.expanduser('~')
         f=open(path+"/.db_config","r")
@@ -64,7 +65,10 @@ class stockScheduler():
     def get_could_buy(self):
         positions = self.shipane.get_positions(self.client)
         sub_account = positions['sub_accounts']
-        could_buy_money = float(sub_account.iat[0, self.type])
+        if self.client==self.zxzq:
+            could_buy_money = float(sub_account.iat[0, 3])
+        if self.client==self.cfzq:
+            could_buy_money = float(sub_account.iat[0, 2])
         return could_buy_money
     def get_could_sell(self,code):
         positions = self.shipane.get_positions(client=self.client)
@@ -118,7 +122,7 @@ class stockScheduler():
                 if not amount:amount=self.get_could_sell(code)
                 self.shipane.sell(symbol=code, price=price,type='LIMIT', priceType=0,amount=amount,client=self.client)
         except Exception as e:
-            self.sendmail("操作流买卖错误！","操作流买卖错误请注意查看".str(e))
+            self.sendmail("操作流买卖错误！","操作流买卖错误请注意查看"+str(e))
     def sendmail(self,title,body):
         yag = yagmail.SMTP(user=self.mail_config['user'],
             password=self.mail_config['password'], host=self.mail_config['host'], port='25')
@@ -133,17 +137,25 @@ if __name__=="__main__":
     #schedudler.add_job(job1,'cron',second="*/2",kwargs={'p':'ok'})
     #scheduler.add_job(tick, 'date', run_date='2016-02-14 15:01:05',args=['ok'])
     schedudler = Scheduler()
-    stockSched=stockScheduler(zxzq)
+    stockSched=stockScheduler(cfzq)
     scheds=stockSched.get_scheduler()
     if scheds:
-        schedudler.add_job(exitsched,'cron',hour='15',minute='02')
-        for sched in scheds:
-            code=sched['code']
-            print(code)
-            rundate=sched['date']+' '+sched['time']
-            #rundate='2017-09-03 23:23:00'
-            schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
-        schedudler.start()
+        try:
+            schedudler.add_job(exitsched,'cron',hour='15',minute='02')
+            for sched in scheds:
+                code=sched['code']
+                print(code)
+                rundate=sched['date']+' '+sched['time']
+                #rundate='2017-09-03 23:23:00'
+                rundate=datetime.strptime(rundate,'%Y-%m-%d %H:%M:%S')
+                nowdate=datetime.now()
+                if nowdate<rundate:
+                    print(rundate)
+                    schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
+            schedudler.start()
+        except Exception as e:
+            print(e)
+            schedudler.shutdown()
 
 
 
