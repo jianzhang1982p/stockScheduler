@@ -3,6 +3,7 @@ from datetime import datetime
 import contextlib,pymysql
 import shipane_sdk,os,yagmail
 import requests
+import tushare as ts
 class stockScheduler(object):
     def __init__(self,client):
         path=os.path.expanduser('~')
@@ -128,6 +129,22 @@ class stockScheduler(object):
             password=self.mail_config['password'], host=self.mail_config['host'], port='25')
         yag.send(to='20728850@qq.com', subject=title, contents=[body])
         print("邮件已发送成功！"+title+body)
+    def repo(self):
+        repo_symbol='131810'
+        df = ts.get_realtime_quotes(repo_symbol)
+        print(df,df['bid'][0])
+        order = { 
+            'action': 'SELL',
+            'symbol': repo_symbol,
+            'type': 'LIMIT',
+            'price': float(df['bid'][0]),
+            'amountProportion': 'ALL'
+        }
+        try:
+            client = self.client
+            self.shipane.execute(client, **order)
+        except Exception as e:
+            print('客户端[%s]逆回购失败', client)
 def exitsched():
     schedudler.shutdown()
     exit()
@@ -139,9 +156,12 @@ if __name__=="__main__":
     schedudler = Scheduler()
     stockSched=stockScheduler(cfzq)
     scheds=stockSched.get_scheduler()
+    
+    schedudler.add_job(exitsched,'cron',hour='15',minute='02')
+    schedudler.add_job(stockSched.repo,'cron',hour='14',minute='58')
+    
     if scheds:
         try:
-            schedudler.add_job(exitsched,'cron',hour='15',minute='02')
             for sched in scheds:
                 code=sched['code']
                 print(code)
