@@ -175,10 +175,10 @@ if __name__=="__main__":
                 if nowdate<rundate:
                     print(rundate)
                     schedudler.add_job(stockSched.action,'date',run_date=rundate,kwargs={'stock':sched})
-            schedudler.start()
         except Exception as e:
             print(e)
             schedudler.shutdown()
+    schedudler.start()
 
 
 
