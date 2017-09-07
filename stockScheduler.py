@@ -145,6 +145,8 @@ class stockScheduler(object):
             self.shipane.execute(client, **order)
         except Exception as e:
             print('客户端[%s]逆回购失败', client)
+    def purchase_new_stocks(self):
+        new_stocks=self.shipane.purchase_new_stocks(client=self.client)
 def exitsched():
     schedudler.shutdown()
     exit()
@@ -159,6 +161,7 @@ if __name__=="__main__":
     
     schedudler.add_job(exitsched,'cron',hour='15',minute='02')
     schedudler.add_job(stockSched.repo,'cron',hour='14',minute='58')
+    schedudler.add_job(stockSched.purchase_new_stocks,'cron',hour='9',minute='50')
     
     if scheds:
         try:
