@@ -8,15 +8,20 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 class select_stock():
     def __init__(self):
+        path=os.path.expanduser('~')
+        f=open(path+"/.db_config","r")
+        config = f.read()
+        f.close()
+        config=eval(config)
         self.db_config={
-            'host':'wnqyf.com',
-            'port':3306,
-            'user':'wnq',
-            'password':'wnq6',
-            'db':'wnqyf',
-            'charset':'utf8',
-            'cursorclass':pymysql.cursors.DictCursor,
-        }
+             'host':config['db_host'],
+             'port':config['db_port'],
+             'user':config['db_user'],
+             'password':config['db_password'],
+             'db':config['db_name'],
+             'charset':'utf8',
+             'cursorclass':pymysql.cursors.DictCursor,
+             }
         self.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflat',
