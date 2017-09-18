@@ -90,6 +90,10 @@ class stockScheduler(object):
             cursor.execute(sql)
             result=cursor.fetchall()
         return result
+    def delete_scheduler(self):
+        with self.mysql_connnect() as cursor:
+            sql="delete from zy_stock_scheduler where 1"
+            cursor.execute(sql)
     def action(self,stock):
         print(stock)
         if not stock or not stock.get('code'):return
@@ -160,6 +164,7 @@ if __name__=="__main__":
     scheds=stockSched.get_scheduler()
     
     schedudler.add_job(exitsched,'cron',hour='15',minute='02')
+    schedudler.add_job(stockSched.delete_scheduler,'cron',hour='15',minute='10')
     schedudler.add_job(stockSched.repo,'cron',hour='14',minute='58')
     schedudler.add_job(stockSched.purchase_new_stocks,'cron',hour='9',minute='50')
     
@@ -179,11 +184,5 @@ if __name__=="__main__":
             print(e)
             schedudler.shutdown()
     schedudler.start()
-
-
-
-
-
-
 
 
