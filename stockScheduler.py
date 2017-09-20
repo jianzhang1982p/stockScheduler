@@ -3,6 +3,7 @@ from datetime import datetime
 import contextlib,pymysql
 import shipane_sdk,os,yagmail
 import requests
+import sys
 import tushare as ts
 class stockScheduler(object):
     def __init__(self,client):
@@ -134,21 +135,31 @@ class stockScheduler(object):
         yag.send(to='20728850@qq.com', subject=title, contents=[body])
         print("邮件已发送成功！"+title+body)
     def repo(self):
-        repo_symbol='131810'
-        df = ts.get_realtime_quotes(repo_symbol)
-        print(df,df['bid'][0])
-        order = { 
-            'action': 'SELL',
-            'symbol': repo_symbol,
-            'type': 'LIMIT',
-            'price': float(df['bid'][0]),
-            'amountProportion': 'ALL'
-        }
-        try:
-            client = self.client
-            self.shipane.execute(client, **order)
-        except Exception as e:
-            print('客户端[%s]逆回购失败', client)
+        with self.mysql_connnect() as cursor:
+            sql="select * from zy_stock_config"
+            cursor.execute(sql)
+            results=cursor.fetchall()
+        config={}
+        for result in results:
+            config[result['name']]=result['value']
+        if config['could_repo']=='0':
+            print(config['could_repo'])
+        if config['could_repo']=='1':
+            repo_symbol='131810'
+            df = ts.get_realtime_quotes(repo_symbol)
+            print(df,df['bid'][0])
+            order = { 
+                'action': 'SELL',
+                'symbol': repo_symbol,
+                'type': 'LIMIT',
+                'price': float(df['bid'][0]),
+                'amountProportion': 'ALL'
+            }
+            try:
+                client = self.client
+                self.shipane.execute(client, **order)
+            except Exception as e:
+                print('客户端[%s]逆回购失败', client)
     def purchase_new_stocks(self):
         new_stocks=self.shipane.purchase_new_stocks(client=self.client)
 def exitsched():
@@ -157,6 +168,10 @@ def exitsched():
 if __name__=="__main__":
     zxzq='account:3782'
     cfzq='account:2033'
+    if sys.argv[1]=='test':
+        stockSched=stockScheduler(cfzq)
+        stockSched.repo()
+        exit()
     #schedudler.add_job(job1,'cron',second="*/2",kwargs={'p':'ok'})
     #scheduler.add_job(tick, 'date', run_date='2016-02-14 15:01:05',args=['ok'])
     schedudler = Scheduler()
